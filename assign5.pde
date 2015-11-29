@@ -26,8 +26,8 @@ boolean rightPressed = false;
 
 int[] enemyX = new int[enemyCount];
 int[] enemyY = new int[enemyCount];
-float[] bulletX = new float[5];
-float[] bulletY = new float[5];
+int[] bulletX = new int[5];
+int[] bulletY = new int[5];
 boolean[] bulletShoot = new boolean[5];
 
 int bulletNum = 0;
@@ -92,11 +92,55 @@ void draw(){
   
   //treasure hit
     image(treasure,treasureX,treasureY);
-     if(fighterX <= treasureX+treasure.width && fighterX>=treasureX-treasure.width && fighterY <= treasureY+treasure.height && fighterY>= treasureY-treasure.height){
+    if(isHit(fighterX, fighterY, fighter.width, fighter.height, treasureX, treasureY, treasure.width, treasure.height) == true){
           hpX += 20;
       treasureX=floor(random(0,470));
       treasureY=floor(random(60,420));
      }
+  
+  //enemy hit
+  for (int i = 0; i < enemyCount; ++i) {
+      if (enemyX[i] != -1 || enemyY[i] != -1) {
+        if(isHit(fighterX, fighterY, fighter.width, fighter.height, enemyX[i], enemyY[i], enemy.width, enemy.height) == true){
+          hpX -= 40;
+          enemyX[i] = -1;
+          enemyY[i] = -1;
+        }
+      }
+  }
+  
+  //bullet hit
+     for (int i = 0; i < enemyCount; i++ ){
+       for(int j =0; j<5; j++){
+         if (enemyX[i] != -1 || enemyY[i] != -1) {
+           if(bulletNumLimit[j] == true){
+             if(isHit(bulletX[j], bulletY[j], bullet.width, bullet.height, enemyX[i], enemyY[i], enemy.width, enemy.height) == true){
+               enemyX[i] = -1;
+               enemyY[i] = -1;
+               bulletNumLimit[j] =false;
+               scoreChange(20);
+             }
+           }
+         }
+       }
+     }
+     
+   for (int i = 0; i < 5; i ++){
+      if (bulletNumLimit[i] == true){
+        image (bullet, bulletX[i], bulletY[i]);
+         bulletX[i] -= 5;
+      }
+      if (bulletX[i] < - bullet.width){
+        bulletNumLimit[i] = false;
+      }
+    }
+      
+  //score
+  if (gameState == WAVE1 || gameState == WAVE2 || gameState == WAVE3){
+    textFont(scoreWord,30);
+    fill(255);
+    text("score:" + score,20,460);
+  }
   
    //hp boundary
    if(hpX > 200){
@@ -134,30 +178,6 @@ void draw(){
     fighterY=430;
   }
  
- /* for (int i = 0; i < enemyCount; ++i) {
-    if (enemyX[i] != -1 || enemyY[i] != -1) {
-      if(fighterX <= enemyX[i]+enemy.width/2 && fighterX >= enemyX[i]-enemy.width/2 && fighterY <= enemyY[i]+enemy.height/2 && fighterY>= enemyY[i]-enemy.height/2){
-        hpX -= 40;
-      }
-    }
-  } 
-  */
-    for (int i = 0; i < 5; i ++){
-        if (bulletNumLimit[i] == true){
-          image (bullet, bulletX[i], bulletY[i]);
-          bulletX[i] -= 5;
-        }
-        if (bulletX[i] < - bullet.width){
-          bulletNumLimit[i] = false;
-        }
-      }
-      
-  //score
-  if (gameState == WAVE1 || gameState == WAVE2 || gameState == WAVE3){
-    textFont(scoreWord,30);
-    fill(255);
-    text("score:" + score,20,460);
-  }
 
 
  switch(gameState){
@@ -178,21 +198,6 @@ void draw(){
         enemyX[i]+=5;
       }
     }
-    
-    //bullet hit
-     for (int i = 0; i < 5; i++ ){
-       for(int j =0; j<5; j++){
-         if(bulletNumLimit[j] == true){
-           if(bulletX[j] >= enemyX[i] - bullet.width && bulletX[j] <= enemyX[i] + enemy.width 
-                && bulletY[j] >= enemyY[i] - bullet.height && bulletY[j] <= enemyY[i] + enemy.height){
-             enemyX[i] = -1;
-             enemyY[i] = -1;
-             bulletNumLimit[j] =false;
-             scoreChange(20);
-           }
-         }
-       }
-     }
 
      if(enemyChangeLine > width){
        gameState = WAVE2;
@@ -212,20 +217,6 @@ void draw(){
       }
     } 
     
-    //bullet hit
-     for (int i = 0; i < 5; i++ ){
-       for(int j =0; j<5; j++){
-         if(bulletNumLimit[j] == true){
-           if(bulletX[j] >= enemyX[i] - bullet.width && bulletX[j] <= enemyX[i] + enemy.width 
-                && bulletY[j] >= enemyY[i] - bullet.height && bulletY[j] <= enemyY[i] + enemy.height){
-             enemyX[i] = -1;
-             enemyY[i] = -1;
-             bulletNumLimit[j] =false;
-             scoreChange(20);
-           }
-         }
-       }
-     }
     
       if(enemyChangeLine > width){
        gameState = WAVE3;
@@ -246,21 +237,6 @@ void draw(){
       }
     }
     
-    //bullet hit
-     for (int i = 0; i < 8; i++ ){
-       for(int j =0; j<5; j++){
-         if(bulletNumLimit[j] == true){
-           if(bulletX[j] >= enemyX[i] - bullet.width && bulletX[j] <= enemyX[i] + enemy.width 
-                && bulletY[j] >= enemyY[i] - bullet.height && bulletY[j] <= enemyY[i] + enemy.height){
-             enemyX[i] = -1;
-             enemyY[i] = -1;
-             bulletNumLimit[j] =false;
-             scoreChange(20);
-           }
-         }
-       }
-     }
-    
      if(enemyChangeLine > width){
        gameState = WAVE1;
        addEnemy(0);
@@ -271,17 +247,19 @@ void draw(){
      }
      break;
      
-      case GAME_LOSE:
+     case GAME_LOSE:
      image(end2,0,0);
      if(mouseX>200 && mouseX<440 && mouseY>300 && mouseY<350)
       if(mousePressed){
         gameState = WAVE1;
-        hpX=40;
-        fighterX=550;
-        fighterY=240;
-        treasureX=floor(random(0,470));
-        treasureY=floor(random(60,420));  
+        hpX = 40;
+        fighterX = 550;
+        fighterY = 240;
+        treasureX = floor(random(0,470));
+        treasureY = floor(random(60,420));  
         addEnemy(0);
+        score = 0;
+        enemyChangeLine = enemyX[0]-750;
       }else{
         image(end1,0,0);
       }
@@ -362,6 +340,14 @@ void addDiamondEnemy()
 
 void scoreChange(int value){
   score += value;
+}
+
+boolean isHit(int ax, int ay, int aw, int ah, int bx, int by, int bw, int bh){
+  if(ay + ah >= by && by + bh >= ay && ax + aw >= bx && bx + bh >= ax){
+    return true;
+  }else{
+    return false;
+  }
 }
 
 void keyPressed(){
