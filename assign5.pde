@@ -124,11 +124,18 @@ void draw(){
          }
        }
      }
-     
+   //draw bullet
    for (int i = 0; i < 5; i ++){
       if (bulletNumLimit[i] == true){
         image (bullet, bulletX[i], bulletY[i]);
          bulletX[i] -= 5;
+         if(closestEnemy(bulletX[i], bulletY[i]) != -1){
+             if(bulletY[i] >= enemyY[closestEnemy(bulletX[i], bulletY[i])]){
+             bulletY[i]--;
+             }else if(bulletY[i] < enemyY[closestEnemy(bulletX[i], bulletY[i])]){
+             bulletY[i]++;
+             }
+         }
       }
       if (bulletX[i] < - bullet.width){
         bulletNumLimit[i] = false;
@@ -348,6 +355,20 @@ boolean isHit(int ax, int ay, int aw, int ah, int bx, int by, int bw, int bh){
   }else{
     return false;
   }
+}
+
+int closestEnemy(int x, int y){
+  int enemyID = -1;
+  float min = dist(enemyX[0],enemyY[0],x,y);
+  for (int i = 0; i < enemyCount; ++i) {   
+      if (enemyX[i] != -1 || enemyY[i] != -1) {
+        if(dist(enemyX[i],enemyY[i],x,y) < min){
+          min = dist(enemyX[i],enemyY[i],x,y);
+          enemyID = i;
+        }
+     }       
+  }
+  return enemyID;
 }
 
 void keyPressed(){
